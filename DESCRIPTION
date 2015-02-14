@@ -1,0 +1,9 @@
+Package: SpatialDelayDiff
+Type: Package
+Title: Implements spatial and nonspatial delay-difference model
+Version: 1.0
+Date: 2015-02-14
+Author: James Thorson
+Maintainer: James Thorson <James.T.Thorson@gmail.com>
+Depends: R (>= 3.1.0), RandomForest, PBSmapping, matlab, pscl, RANN
+License: GPL-2
