@@ -4,15 +4,15 @@
 # Simulation example
 #########################
 
+# Install from GitHub
+library(devtools)
+install_github("James-Thorson/spatial_delay-difference", auth_token="8da0b0f3838f1e4b77dd422b1d824bdf7cdba44a")
+
 RunFile = ### Set this to something
 
 # Location of TMB files
 TmbFile = paste0(system.file("executables", package="SpatialDelayDiff"),"/")
 
-
-if(FALSE){
-  devtools::install_github("James-Thorson/spatial_delay-difference", auth_token="8da0b0f3838f1e4b77dd422b1d824bdf7cdba44a")
-}
 
 # Libraries
 library(INLA)
