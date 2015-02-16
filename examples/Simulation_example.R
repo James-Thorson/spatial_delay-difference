@@ -21,7 +21,7 @@ library(TMB)
 library(SpatialDelayDiff)
 
 # Which model to use?
-  Model = c("Nonspatial", "Spatial", "Index")[2]
+  Model = c("Nonspatial", "Spatial", "Index", "MeanLength_terminalcatch")[2]
 
 # Compile model in TMB
   setwd( TmbFile )
@@ -38,7 +38,7 @@ library(SpatialDelayDiff)
   Fix_Q = TRUE   # 
   SpatialSimModel = "Matern"
   MeshType = c("Minimal","Recommended")[1]
-  Version = "delay_difference_v8d"
+  Version = "delay_difference_v8e"
   n_s = 25
 # Domain
   n_t = 30
@@ -111,19 +111,10 @@ library(SpatialDelayDiff)
     Index_hat[unique(DF[,'Year_j']),c("Mean_I","logSD_I")] = cbind(predict(Glm_I, newdata=PredDF, type="response")/(AreaSwept*q_I)*DomainArea, summary(Glm_I)$coef$count[1:length(unique(DF[,'Year_j'])),'Std. Error'])
     Index_hat[unique(DF[,'Year_j']),c("Mean_W","SD_W")] = cbind(predict(Glm_W, newdata=PredDF, type="response"), summary(Glm_W)$coef[1:length(unique(DF[,'Year_j'])),'Std. Error'])
   
-  # Covariates
-  X_stations = cbind( rep(1,n_s*n_t) )
-  DF_input = DF
-  if(ModelSet[ModelI]=="Index"){
-    IndexMat = Index_hat
-    DF_input[,c("I_j","W_j")] = -999
-  }
-  if(ModelSet[ModelI]!="Index"){
-    IndexMat = array(-999, dim=dim(Index_hat) )
-  }
-      
   # Make TMB inputs
-  TmbList = MakeTmbList_Fn( Version=Version, Model=Model, Fix_Q=Fix_Q, ErrorModel_CatchRates=ErrorModel_CatchRates, ErrorModel=ErrorModel, Smooth_F=Smooth_F, n_j=n_j, n_i=n_i, n_s=n_s, n_t=n_t, DF_input=DF_input, C_t=C_t, mesh_stations=mesh_stations, spde_stations=spde_stations, Area_i=Area_i, alpha_g=alpha_g, ro=ro, w_k=w_k, M=M, k=k, CV_c=CV_c, CV_w=CV_w, q_I=q_I )
+  TmbList = MakeTmbList_Fn( Version=Version, Model=Model, Fix_Q=Fix_Q, ErrorModel_CatchRates=ErrorModel_CatchRates, ErrorModel=ErrorModel, Smooth_F=Smooth_F, n_j=n_j, n_i=n_i, n_s=n_s, n_t=n_t, DF_input=DF, C_t=C_t, mesh_stations=mesh_stations, spde_stations=spde_stations, Area_i=Area_i, alpha_g=alpha_g, ro=ro, w_k=w_k, M=M, k=k, CV_c=CV_c, CV_w=CV_w, q_I=q_I )
+  # Look at data that are passed for this model
+  # TmbList$Data[-match(c("G0","G1","G2"),names(TmbList$Data))]
   
   # Save stuff
   MapList = list( "Map"=TmbList[["Map"]], "Random"=TmbList[["Random"]])
@@ -137,17 +128,18 @@ library(SpatialDelayDiff)
   obj$fn( obj$par )
   obj$gr( obj$par )
   
+  # Look at which parameters are being estimated
+  obj$env$last.par.best
+  
   # Settings
   obj$control <- list(trace=1, parscale=1, REPORT=1, reltol=1e-12, maxit=100)
   obj$hessian <- FALSE
-  obj$fn(obj$par)
 
   # Run optimizer
-  tic()
-    opt = nlminb(start=obj$par, objective=obj$fn, gradient=obj$gr, lower=-20, upper=20, control=list(trace=1, eval.max=1e4, iter.max=1e4))
-    Report = obj$report()
-    Sdreport = try( sdreport(obj) )
-  toc()
+  opt = nlminb(start=obj$par, objective=obj$fn, gradient=obj$gr, lower=-20, upper=20, control=list(trace=1, eval.max=1e4, iter.max=1e4))
+  opt[["final_gradient"]] = obj$gr( opt$par )
+  Report = obj$report()
+  Sdreport = try( sdreport(obj) )
   dyn.unload( paste(TmbFile,dynlib(Version),sep="") )
   
   # Save results

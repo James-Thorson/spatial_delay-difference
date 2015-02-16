@@ -24,7 +24,7 @@ Type objective_function<Type>::operator() ()
   DATA_FACTOR(Station_j);    // Location for each sample
   DATA_FACTOR(Year_j);       // Year (after beginning of burn-in) for each sample
   DATA_VECTOR(C_t);         // Total catch for each year (excluding burn-in)
-  DATA_MATRIX(IndexMat);         // Total catch for each year (excluding burn-in)
+  DATA_MATRIX(IndexMat);         // 0-1st column: index of stockwide abundance; 2-3rd column: index of stockwide average weight
   
   // SPDE objects
   DATA_FACTOR(meshidxloc);	// Pointers into random effects vector x
@@ -37,29 +37,29 @@ Type objective_function<Type>::operator() ()
   // Known values
   DATA_SCALAR(alpha_g);
   DATA_SCALAR(ro);
-  DATA_SCALAR(w_k);
-  DATA_SCALAR(M);
-  DATA_INTEGER(k);
+  DATA_SCALAR(w_k);                    // weight
+  DATA_SCALAR(M);                      // natural mortality rate (intantanous, per year)
+  DATA_INTEGER(k);                     // age at maturity
 
   // Fixed parameters
-  DATA_SCALAR(CV_c);
-  DATA_SCALAR(CV_w);
+  DATA_SCALAR(CV_c);                   // CV of catches (explicit F)
+  DATA_SCALAR(CV_w);                   // CV of average weight for each sample
 
-  PARAMETER(log_F_sd);
-  PARAMETER_VECTOR(log_F_t_input);
-  PARAMETER(log_q_I);
-  PARAMETER(beta);
-  PARAMETER(log_tau_E);
-  PARAMETER(log_tau_O);
-  PARAMETER(log_kappa);
-  PARAMETER_VECTOR(ln_VarInfl);
-  PARAMETER(log_extraCV_w);
-  PARAMETER(log_tau_N);
-  PARAMETER_VECTOR(log_extraCV_Index);
+  PARAMETER(log_F_sd);                 // SD of F(t) relative to F(t-1)
+  PARAMETER_VECTOR(log_F_t_input);     // F(t)
+  PARAMETER(log_q_I);                  // catchability for count data
+  PARAMETER(beta);                     // median expected recruitment
+  PARAMETER(log_tau_E);                // magnitude of spatiotemporal variation
+  PARAMETER(log_tau_O);                // magnitude of spatial variation
+  PARAMETER(log_kappa);                // range of spatial variation
+  PARAMETER_VECTOR(ln_VarInfl);        // Neg-Bin variance inflation for counts at each sample j
+  PARAMETER(log_extraCV_w);            // additional CV of average weight at sample j
+  PARAMETER(log_tau_N);                // magnitude of temporal variation
+  PARAMETER_VECTOR(log_extraCV_Index); // variance inflation for stockwide abundance index and average weight
 
-  PARAMETER_ARRAY(Epsilon_input);
-  PARAMETER_VECTOR(Omega_input);
-  PARAMETER_VECTOR(Nu_input);
+  PARAMETER_ARRAY(Epsilon_input);  // Spatiotemporal variation in recruitment
+  PARAMETER_VECTOR(Omega_input);   // Spatial variation in recruitment (constant among years)
+  PARAMETER_VECTOR(Nu_input);      // Temporal variation in recruitment
 
   using namespace density;
   int i,j;
@@ -98,7 +98,7 @@ Type objective_function<Type>::operator() ()
   }
   
   // Probability of random fields
-  if( ModelType>0.5 & ModelType<1.5 ){
+  if( ModelType==1 ){
     Eigen::SparseMatrix<Type> Q = kappa4*G0 + Type(2.0)*kappa2*G1 + G2;
     GMRF_t<Type> GMRF_temp = GMRF(Q);
     for (int t=0;t<n_t;t++){
@@ -108,7 +108,7 @@ Type objective_function<Type>::operator() ()
   }
   
   // Probability of non-spatial random effects
-  if( ModelType>1.5 & ModelType<2.5 ){
+  if( ModelType==2 ){
     for (int t=0;t<n_t;t++){
       g -= dnorm(Nu_input(t), Type(0.0), Type(1.0), 1);
     }
@@ -151,9 +151,6 @@ Type objective_function<Type>::operator() ()
       if(t==0) N_it(i,t) = N_equil(i) * exp(-M-F_equil) + R_it(i,t);    
       if(t>=1) N_it(i,t) = N_it(i,t-1) * exp(-M-F_t(t-1)) + R_it(i,t);  
       // Biomass
-      //if(t==0) S_it(i,t) = (1+ro)*exp(-M-F_equil)*S_equil(i) - ro*exp(-2*M-F_equil-F_equil)*S_equil(i) + w_k*R_it(i,t) - (w_k-alpha_g)*exp(-F_equil-M)*R_equil(i);
-      //if(t==1) S_it(i,t) = (1+ro)*exp(-M-F_t(t-1))*S_it(i,t-1) - ro*exp(-2*M-F_t(t-1)-F_equil)*S_equil(i) + w_k*R_it(i,t) - (w_k-alpha_g)*exp(-F_t(t-1)-M)*R_it(i,t-1);
-      //if(t>=2) S_it(i,t) = (1+ro)*exp(-M-F_t(t-1))*S_it(i,t-1) - ro*exp(-2*M-F_t(t-1)-F_t(t-2))*S_it(i,t-2) + w_k*R_it(i,t) - (w_k-alpha_g)*exp(-F_t(t-1)-M)*R_it(i,t-1);
       if(t==0) S_it(i,t) = exp(-M-F_equil) * (alpha_g*N_equil(i) + ro*S_equil(i)) + w_k*R_equil(i);
       if(t>=1) S_it(i,t) = exp(-M-F_t(t-1)) * (alpha_g*N_it(i,t-1) + ro*S_it(i,t-1)) + w_k*R_it(i,t);
       // Weight
