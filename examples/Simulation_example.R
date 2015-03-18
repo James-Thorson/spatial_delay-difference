@@ -153,7 +153,7 @@ library(SpatialDelayDiff)
   ############################
 
   # Save Varanoi stuff
-  png( file=paste(RepFile,"Voronoi.png",sep=""), width=6, height=3, res=200, units="in")
+  png( file=paste(RunFile,"Voronoi.png",sep=""), width=6, height=3, res=200, units="in")
     par( mfrow=c(1,2), mar=c(3,3,2,0), mgp=c(2,0.5,0) )
     # Visualize samples
     plotMap( Voronoi_samples )
