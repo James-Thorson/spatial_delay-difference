@@ -25,6 +25,7 @@ library(SpatialDelayDiff)
 
 # Compile model in TMB
   setwd( TmbFile )
+  Version = "delay_difference_v8e"
   compile( paste0(Version,".cpp") )
 
 #### Settings
@@ -38,7 +39,6 @@ library(SpatialDelayDiff)
   Fix_Q = TRUE   # 
   SpatialSimModel = "Matern"
   MeshType = c("Minimal","Recommended")[1]
-  Version = "delay_difference_v8e"
   n_s = 25
 # Domain
   n_t = 30
@@ -112,7 +112,7 @@ library(SpatialDelayDiff)
     Index_hat[unique(DF[,'Year_j']),c("Mean_W","SD_W")] = cbind(predict(Glm_W, newdata=PredDF, type="response"), summary(Glm_W)$coef[1:length(unique(DF[,'Year_j'])),'Std. Error'])
   
   # Make TMB inputs
-  TmbList = MakeTmbList_Fn( Version=Version, Model=Model, Fix_Q=Fix_Q, ErrorModel_CatchRates=ErrorModel_CatchRates, ErrorModel=ErrorModel, Smooth_F=Smooth_F, n_j=n_j, n_i=n_i, n_s=n_s, n_t=n_t, DF_input=DF, C_t=C_t, mesh_stations=mesh_stations, spde_stations=spde_stations, Area_i=Area_i, alpha_g=alpha_g, ro=ro, w_k=w_k, M=M, k=k, CV_c=CV_c, CV_w=CV_w, q_I=q_I )
+  TmbList = MakeTmbList_Fn( Version=Version, Model=Model, IndexMat=Index_hat, Fix_Q=Fix_Q, ErrorModel_CatchRates=ErrorModel_CatchRates, ErrorModel=ErrorModel, Smooth_F=Smooth_F, n_j=n_j, n_i=n_i, n_s=n_s, n_t=n_t, DF_input=DF, C_t=C_t, mesh_stations=mesh_stations, spde_stations=spde_stations, Area_i=Area_i, alpha_g=alpha_g, ro=ro, w_k=w_k, M=M, k=k, CV_c=CV_c, CV_w=CV_w, q_I=q_I )
   # Look at data that are passed for this model
   # TmbList$Data[-match(c("G0","G1","G2"),names(TmbList$Data))]
   
