@@ -6,7 +6,7 @@
 
 # Install from GitHub
 library(devtools)
-install_github("James-Thorson/spatial_delay-difference", auth_token="8da0b0f3838f1e4b77dd422b1d824bdf7cdba44a")
+install_github("James-Thorson/spatial_delay-difference")
 
 RunFile = ### Set this to something
 
