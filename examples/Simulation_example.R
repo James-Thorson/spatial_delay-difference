@@ -13,7 +13,6 @@ RunFile = ### Set this to something
 # Location of TMB files
 TmbFile = paste0(system.file("executables", package="SpatialDelayDiff"),"/")
 
-
 # Libraries
 library(INLA)
 library(TMB)
@@ -74,10 +73,10 @@ library(SpatialDelayDiff)
   Ngrid_proj = 1e4  
   
   # Save settings
-  SettingsList = list( "RandomSeed"=RandomSeed, "ThreadNum"=ThreadNum, "RepSet"=RepSet, "ModelSet"=ModelSet, "ErrorModel_CatchRates"=ErrorModel_CatchRates, "ErrorModel_MeanWeight"=ErrorModel_MeanWeight, "Smooth_F"=Smooth_F, "Fix_Q"=Fix_Q, "SpatialSimModel"=SpatialSimModel, "MeshType"=MeshType, "Version"=Version, "n_s"=n_s, "n_t"=n_t, "Range_X"=Range_X, "Range_Y"=Range_Y, "k"=k, "ro"=ro, "alpha_g"=alpha_g, "M"=M, "RecFn"=RecFn, "mu_R0_total"=mu_R0_total, "SD_A"=SD_A, "SD_E"=SD_E, "Scale"=Scale, "F_equil"=F_equil, "S_bioecon"=S_bioecon, "Accel"=Accel, "SD_F"=SD_F, "n_samp_per_year"=n_samp_per_year, "AreaSwept"=AreaSwept, "q_I"=q_I, "CV_w"=CV_w, "CV_c"=CV_c)  
-    capture.output(SettingsList, file=paste(DateFile,"SettingsList.txt",sep=""))
-    save(SettingsList, file=paste(DateFile,"SettingsList.RData",sep=""))
-    file.copy( from=paste(TmbFile,Version,".cpp",sep=""), to=paste(DateFile,Version,".cpp",sep=""), overwrite=TRUE)
+  SettingsList = list( "RepSet"=RepSet, "ErrorModel_CatchRates"=ErrorModel_CatchRates, "ErrorModel_MeanWeight"=ErrorModel_MeanWeight, "Smooth_F"=Smooth_F, "Fix_Q"=Fix_Q, "SpatialSimModel"=SpatialSimModel, "MeshType"=MeshType, "Version"=Version, "n_s"=n_s, "n_t"=n_t, "Range_X"=Range_X, "Range_Y"=Range_Y, "k"=k, "ro"=ro, "alpha_g"=alpha_g, "M"=M, "RecFn"=RecFn, "mu_R0_total"=mu_R0_total, "SD_A"=SD_A, "SD_E"=SD_E, "Scale"=Scale, "F_equil"=F_equil, "S_bioecon"=S_bioecon, "Accel"=Accel, "SD_F"=SD_F, "n_samp_per_year"=n_samp_per_year, "AreaSwept"=AreaSwept, "q_I"=q_I, "CV_w"=CV_w, "CV_c"=CV_c)
+    capture.output(SettingsList, file=paste(RunFile,"SettingsList.txt",sep=""))
+    save(SettingsList, file=paste(RunFile,"SettingsList.RData",sep=""))
+    file.copy( from=paste(TmbFile,Version,".cpp",sep=""), to=paste(RunFile,Version,".cpp",sep=""), overwrite=TRUE)
   
   # Simulate data
   DataList = SimData_Fn(n_t=n_t, CV_C=CV_C, SD_A=SD_A, SD_E=SD_E, Scale=Scale, Range_X=Range_X, 
@@ -288,7 +287,7 @@ library(SpatialDelayDiff)
   dev.off()
 
   # Weight -- pred vs. obs
-  png( file=paste(DateFile,"Pred_v_Obs_MeanWeight.png",sep=""), width=4, height=4, res=200, units="in")
+  png( file=paste(RunFile,"Pred_v_Obs_MeanWeight.png",sep=""), width=4, height=4, res=200, units="in")
     Mat = cbind( "Obs"=DF[which(DF[,'I_j']>0),'W_j'], "Pred"=Report$W_it[as.matrix(DF[which(DF[,'I_j']>0),c('Station_j','Year_j')])] )
     # Cbind( Report$W_it[as.matrix(DF[which(DF[,'I_j']>0),c('Station_j','Year_j')])], (Report$S_it/Report$N_it)[as.matrix(DF[which(DF[,'I_j']>0),c('Station_j','Year_j')])]
     plot(x=Mat[,"Pred"], y=Mat[,"Obs"], xlim=c(0,max(Mat,na.rm=TRUE)), ylim=c(0,max(Mat,na.rm=TRUE)), col=rgb(0,0,0,alpha=0.02), , ylab="Obs", xlab="Pred"  ) 
@@ -296,7 +295,7 @@ library(SpatialDelayDiff)
   dev.off()
   
   # Catch rates -- pred vs. obs
-  png( file=paste(DateFile,"Pred_v_Obs_CatchRates.png",sep=""), width=4, height=4, res=200, units="in")
+  png( file=paste(RunFile,"Pred_v_Obs_CatchRates.png",sep=""), width=4, height=4, res=200, units="in")
     Mat = cbind( "Obs"=DF[,'I_j'], "Pred"=Report$I_j_hat )
     plot(x=sqrt(Mat[,"Pred"]), y=sqrt(Mat[,"Obs"]), xlim=c(0,max(sqrt(Mat),na.rm=TRUE)), ylim=c(0,max(sqrt(Mat),na.rm=TRUE)), xaxt="n", yaxt="n", col=rgb(0,0,0,alpha=0.02), ylab="Obs", xlab="Pred"  ) 
     axis(1, at=axTicks(1), labels=axTicks(1)^2)
